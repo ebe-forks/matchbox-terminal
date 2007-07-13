@@ -43,6 +43,7 @@ main (int argc, char **argv)
   gtk_init (&argc, &argv);
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  g_signal_connect (window, "destroy", gtk_main_quit, NULL);
   
   box = gtk_hbox_new (FALSE, 0);
   gtk_container_add (GTK_CONTAINER (window), box);
