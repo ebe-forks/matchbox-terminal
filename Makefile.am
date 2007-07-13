@@ -1,10 +1,12 @@
-bin_PROGRAMS = matchbox-terminal
-
 AM_CPPFLAGS = $(VTE_CFLAGS)
 AM_CFLAGS = -Wall
 LDADD = $(VTE_LIBS)
 
+bin_PROGRAMS = matchbox-terminal
 matchbox_terminal_SOURCES = main.c
+
+desktopdir = $(datadir)/applications
+dist_desktop_DATA = matchbox-terminal.desktop
 
 # make maintainer-clean should remove *everything* 
 MAINTAINERCLEANFILES = \
