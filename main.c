@@ -44,6 +44,7 @@ main (int argc, char **argv)
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect (window, "destroy", gtk_main_quit, NULL);
+  gtk_window_set_title (GTK_WINDOW (window), "Terminal");
   
   box = gtk_hbox_new (FALSE, 0);
   gtk_container_add (GTK_CONTAINER (window), box);
