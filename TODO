@@ -1,3 +1,4 @@
 * Tabs
 * Check it builds with GTK+ 2.6
 * Menu with optional libowl
+* Single instance binary which creates new windows
