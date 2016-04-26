@@ -18,13 +18,15 @@
 
 #include <gtk/gtk.h>
 #include <vte/vte.h>
+#include <glib.h>
 
 static void
 on_window_title_changed (VteTerminal *terminal, GtkWindow *window)
 {
   char *title;
 
-  title = g_strdup_printf ("%s - Terminal", terminal->window_title);
+  title = g_strdup_printf ("%s - Terminal",
+                           vte_terminal_get_window_title (terminal));
   gtk_window_set_title (window, title);
   g_free (title);
 }
@@ -38,16 +40,22 @@ on_eof (VteTerminal *terminal, gpointer user_data)
 int
 main (int argc, char **argv)
 {
-  GtkWidget *window, *box, *terminal, *scrollbar;
-  
+  GtkWidget *window, *terminal, *scrolled_win;
+  GError *err = NULL;
+  char *cmd;
+  char **cmd_argv = NULL;
+  int cmd_argc;
+
   gtk_init (&argc, &argv);
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect (window, "destroy", gtk_main_quit, NULL);
   gtk_window_set_title (GTK_WINDOW (window), "Terminal");
   
-  box = gtk_hbox_new (FALSE, 0);
-  gtk_container_add (GTK_CONTAINER (window), box);
+  scrolled_win = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW(scrolled_win),
+                                  GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+  gtk_container_add (GTK_CONTAINER (window), scrolled_win);
 
   terminal = g_object_connect
     (vte_terminal_new (),
@@ -57,17 +65,38 @@ main (int argc, char **argv)
      /* Child is trying to control the terminal */
      "signal::window-title-changed", on_window_title_changed, window,
      NULL);
-  gtk_box_pack_start (GTK_BOX (box), terminal, TRUE, TRUE, 0);
+  gtk_container_add (GTK_CONTAINER (scrolled_win), terminal);
 
-  scrollbar = gtk_vscrollbar_new (VTE_TERMINAL (terminal)->adjustment);
-  gtk_box_pack_start (GTK_BOX (box), scrollbar, FALSE, FALSE, 0);
+  cmd = vte_get_user_shell ();
+  if (!cmd)
+    cmd = g_strdup (g_getenv ("SHELL"));
+  if (!cmd)
+    cmd = g_strdup ("/bin/sh");
 
-  vte_terminal_fork_command (VTE_TERMINAL (terminal),
-                             NULL, NULL, NULL, NULL, TRUE, TRUE, TRUE);
+  if (!g_shell_parse_argv(cmd, &cmd_argc, &cmd_argv, &err)) {
+    g_printerr ("Failed to parse shell command line '%s'\n", cmd);
+  } else if (!vte_terminal_spawn_sync (VTE_TERMINAL (terminal),
+                                       VTE_PTY_DEFAULT,
+                                       NULL,
+                                       cmd_argv,
+                                       NULL,
+                                       G_SPAWN_SEARCH_PATH,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &err)) {
+    g_printerr ("Failed to spawn shell: %s\n", err->message);
+    g_error_free (err);
+  }
+
+
+  gtk_window_set_default_size (GTK_WINDOW (window), 640, 480);
 
   gtk_widget_show_all (window);
 
   gtk_main ();
 
+  g_free (cmd);
   return 0;
 }

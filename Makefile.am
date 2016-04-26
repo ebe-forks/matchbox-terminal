@@ -1,6 +1,6 @@
-AM_CPPFLAGS = $(VTE_CFLAGS)
+AM_CPPFLAGS = $(MBTERM_CFLAGS)
 AM_CFLAGS = -Wall
-LDADD = $(VTE_LIBS)
+LDADD = $(MBTERM_LIBS)
 
 bin_PROGRAMS = matchbox-terminal
 matchbox_terminal_SOURCES = main.c
