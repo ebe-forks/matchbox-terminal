@@ -42,9 +42,32 @@ main (int argc, char **argv)
 {
   GtkWidget *window, *terminal, *scrolled_win;
   GError *err = NULL;
-  char *cmd;
+  char *cmd = NULL;
   char **cmd_argv = NULL;
   int cmd_argc;
+  GOptionContext *context = NULL;
+
+  const GOptionEntry options[] = {
+    {
+          "command", 'e', 0,
+          G_OPTION_ARG_STRING, &cmd,
+        "Execute a command in the terminal", NULL},
+    {NULL}
+  };
+
+  context =
+      g_option_context_new
+      ("Open matchbox terminal and parser the command line args");
+  g_option_context_add_main_entries (context, options, NULL);
+  g_option_context_add_group (context, gtk_get_option_group (TRUE));
+  g_option_context_parse (context, &argc, &argv, &err);
+  g_option_context_free (context);
+
+  if (err != NULL) {
+    g_printerr ("Failed to parse command line arguments: %s\n", err->message);
+    g_error_free (err);
+    return -1;
+  }
 
   gtk_init (&argc, &argv);
 
@@ -67,11 +90,13 @@ main (int argc, char **argv)
      NULL);
   gtk_container_add (GTK_CONTAINER (scrolled_win), terminal);
 
-  cmd = vte_get_user_shell ();
-  if (!cmd)
-    cmd = g_strdup (g_getenv ("SHELL"));
-  if (!cmd)
-    cmd = g_strdup ("/bin/sh");
+  if (cmd == NULL) {
+    cmd = vte_get_user_shell ();
+    if (!cmd)
+      cmd = g_strdup (g_getenv ("SHELL"));
+    if (!cmd)
+      cmd = g_strdup ("/bin/sh");
+  }
 
   if (!g_shell_parse_argv(cmd, &cmd_argc, &cmd_argv, &err)) {
     g_printerr ("Failed to parse shell command line '%s'\n", cmd);
