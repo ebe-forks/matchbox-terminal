@@ -1,5 +1,5 @@
 AC_PREREQ(2.52)
-AC_INIT(matchbox-terminal, 0.1, [yocto@yoctoproject.org])
+AC_INIT(matchbox-terminal, 0.2, [yocto@yoctoproject.org])
 AC_CONFIG_SRCDIR(main.c)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 AM_CONFIG_HEADER(config.h)
